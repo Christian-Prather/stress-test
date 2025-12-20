@@ -1,0 +1,28 @@
+[project]
+name = "stress-tests"
+version = "0.1.0"
+description = "Comprehensive stress testing suite for evaluating system performance"
+authors = ["Your Name <you@example.com>"]
+channels = ["conda-forge", "nvidia"]
+platforms = ["linux-64"]
+
+[dependencies]
+# Python packages
+python = ">=3.8"
+matplotlib = "*"
+pyyaml = "*"
+numpy = "*"
+setuptools-rust = "*"
+
+# System tools
+stress-ng = "*"
+# build-essential = "*"
+git = "*"
+cmake = "*"
+go = "*"
+
+# MDBook for report generation
+mdbook = { channel = "conda-forge" }
+
+# Rust and Cargo
+rust = "*"
