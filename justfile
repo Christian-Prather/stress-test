@@ -2,11 +2,8 @@
 setup:
     pixi install
     pixi run cargo install mdbook-pdf
-    # Build gpu-burn in the pixi environment
-    rm -rf gpu-burn
-    pixi run git clone https://github.com/wilicc/gpu-burn
-    # Auto-detect compute capability for the GPU
-    pixi run bash -c 'COMPUTE_CAP=$(bash scripts/detect_gpu.sh); echo "Building gpu-burn with compute capability: $COMPUTE_CAP"; cd gpu-burn && pixi run make clean && pixi run make COMPUTE=$COMPUTE_CAP'
+    pixi run sudo apt install glmark2-x11
+
     mkdir -p report/results
 
 # Test single CPU
@@ -43,11 +40,26 @@ mem_multi duration:
 [group('GPU')]
 gpu_stress duration:
     mkdir -p report/results
+    # Build gpu-burn in the pixi environment
+    rm -rf gpu-burn
+    pixi run git clone https://github.com/wilicc/gpu-burn
+    # Auto-detect compute capability for the GPU
+    pixi run bash -c 'COMPUTE_CAP=$(bash scripts/detect_gpu.sh); echo "Building gpu-burn with compute capability: $COMPUTE_CAP"; cd gpu-burn && pixi run make clean && pixi run make COMPUTE=$COMPUTE_CAP'
     echo "Starting GPU burn test for {{ duration }} seconds..."
     cd gpu-burn && pixi run ./gpu_burn {{ duration }} | tee ../report/results/gpu_burn.log && cd ..
     # Extract GPU performance data for plotting
     pixi run python3 scripts/extract_gpu_data.py report/results/gpu_burn.log
     echo "GPU burn test completed."
+
+# GPU benchmark testing with glmark2
+[group('GPU')]
+gpu_benchmark:
+    mkdir -p report/results
+    echo "Starting GPU benchmark test with glmark2..."
+    pixi run glmark2 | tee report/results/glmark2.log
+    # Extract glmark2 performance data for plotting
+    pixi run python3 scripts/extract_glmark2_data.py report/results/glmark2.log --output report/results/glmark2_data.json --plot-data report/results/glmark2_plot_data.json
+    echo "GPU benchmark test completed."
 
 # Disk IO stress test with write operations
 [group('Disk')]
@@ -109,7 +121,8 @@ full_test duration="60":
     just cpu_all {{ duration }}
     just mem_single {{ duration }}
     just mem_multi {{ duration }}
-    just gpu_stress {{ duration }}
+    # just gpu_stress {{ duration }}
+    just gpu_benchmark
     just disk_write_test {{ duration }}
     just disk_io_test {{ duration }}
     just disk_fallocate_test {{ duration }}

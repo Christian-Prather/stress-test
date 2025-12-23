@@ -98,7 +98,7 @@ def create_summary_md(results_dir, src_dir):
     else:
         summary_md += "| Disk Fallocate | ❌ | No test results found |\n"
 
-    # Check GPU test
+    # Check GPU Burn test
     if os.path.exists(f"{results_dir}/gpu_burn.log"):
         with open(f"{results_dir}/gpu_burn.log", "r") as f:
             content = f.read()
@@ -112,6 +112,19 @@ def create_summary_md(results_dir, src_dir):
                 summary_md += "| GPU Burn Test | ❌ | Test output empty |\n"
     else:
         summary_md += "| GPU Burn Test | ❌ | No test results found |\n"
+
+    # Check glmark2 benchmark test
+    if os.path.exists(f"{results_dir}/glmark2.log"):
+        with open(f"{results_dir}/glmark2.log", "r") as f:
+            content = f.read()
+            if "glmark2 Score:" in content:
+                summary_md += "| glmark2 Benchmark | ✅ | Completed successfully |\n"
+            else:
+                summary_md += (
+                    "| glmark2 Benchmark | ⚠️ | Completed but may have issues |\n"
+                )
+    else:
+        summary_md += "| glmark2 Benchmark | ❌ | No test results found |\n"
 
     with open(f"{src_dir}/chapter_summary.md", "w") as f:
         f.write(summary_md)
@@ -258,6 +271,52 @@ def create_gpu_md(results_dir, src_dir):
         gpu_md += "No results available\n"
     gpu_md += "```\n"
 
+    # glmark2 Benchmark Test
+    gpu_md += "\n## glmark2 Benchmark Test\n"
+    if os.path.exists(f"{results_dir}/glmark2.log"):
+        with open(f"{results_dir}/glmark2.log", "r") as f:
+            # Read the content and replace problematic HTML-like tags
+            content = f.read()
+            # Replace <default> with [default] to avoid markdown parsing issues
+            content = content.replace("<default>", "[default]")
+            # Replace the kernel parameter patterns too
+            content = content.replace(
+                "<0,1,0;1,-4,1;0,1,0;>", "[kernel_0,1,0;1,-4,1;0,1,0;]"
+            )
+            content = content.replace(
+                "<1,1,1,1,1;1,1,1,1,1;1,1,1,1,1;>", "[kernel_5x5]"
+            )
+            gpu_md += content
+    else:
+        gpu_md += "No results available\n"
+
+    # Add glmark2 summary if available
+    if os.path.exists(f"{results_dir}/glmark2_data.json"):
+        try:
+            import json
+
+            with open(f"{results_dir}/glmark2_data.json", "r") as f:
+                glmark2_data = json.load(f)
+
+            if "overall_score" in glmark2_data:
+                gpu_md += f"\n**Overall Score:** {glmark2_data['overall_score']}\n"
+
+            if "opengl_info" in glmark2_data:
+                gpu_md += "\n**OpenGL Information:**\n"
+                for key, value in glmark2_data["opengl_info"].items():
+                    gpu_md += f"- {key.replace('_', ' ').title()}: {value}\n"
+
+            if "summary" in glmark2_data and glmark2_data["summary"]["total_tests"] > 0:
+                summary = glmark2_data["summary"]
+                gpu_md += "\n**Performance Summary:**\n"
+                gpu_md += f"- Tests Completed: {summary['total_tests']}\n"
+                gpu_md += f"- Average FPS: {summary['avg_fps']:.2f}\n"
+                gpu_md += f"- Min FPS: {summary['min_fps']}\n"
+                gpu_md += f"- Max FPS: {summary['max_fps']}\n"
+
+        except Exception:
+            gpu_md += "\nError loading glmark2 summary data\n"
+
     with open(f"{src_dir}/chapter_gpu.md", "w") as f:
         f.write(gpu_md)
 
@@ -295,6 +354,20 @@ def create_plots_md(plots_dir, src_dir):
             "The following chart shows GPU performance during the stress test:\n"
         )
         plots_md += "![GPU Performance](plots/gpu_performance.png)\n"
+
+    # glmark2 Benchmark Results (if available)
+    if os.path.exists(f"{plots_dir}/glmark2_benchmark.png"):
+        plots_md += "\n## glmark2 Benchmark Results\n"
+        plots_md += (
+            "The following chart shows detailed glmark2 benchmark test results:\n"
+        )
+        plots_md += "![glmark2 Benchmark](plots/glmark2_benchmark.png)\n"
+
+    # glmark2 Score (if available)
+    if os.path.exists(f"{plots_dir}/glmark2_score.png"):
+        plots_md += "\n## glmark2 Overall Score\n"
+        plots_md += "The following chart shows the overall glmark2 benchmark score:\n"
+        plots_md += "![glmark2 Score](plots/glmark2_score.png)\n"
 
     # GPU Temperature (if available)
     if os.path.exists(f"{plots_dir}/gpu_temperature.png"):

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import csv
+import json
 import os
 import sys
 
@@ -82,6 +83,7 @@ plt.close()
 
 # Plot GPU performance if requested and data is available
 if "--with-gpu" in sys.argv:
+    # First, try to plot GPU burn test data
     gpu_data = []
     csv_file = "report/results/gpu_burn_data.csv"
 
@@ -147,8 +149,75 @@ if "--with-gpu" in sys.argv:
         plt.savefig("report/plots/gpu_combined.png")
         plt.close()
 
-        print("GPU plots generated in report/plots/")
+        print("GPU burn test plots generated in report/plots/")
     else:
-        print("No GPU data available for plotting")
+        print("No GPU burn test data available for plotting")
+
+    # Now, try to plot glmark2 benchmark data
+    glmark2_plot_file = "report/results/glmark2_plot_data.json"
+    if os.path.exists(glmark2_plot_file):
+        try:
+            import json
+
+            with open(glmark2_plot_file, "r") as f:
+                plot_data = json.load(f)
+
+            # Create a horizontal bar chart for glmark2 test results
+            plt.figure(figsize=(12, 10))
+            test_names = plot_data.get("test_names", [])
+            fps_values = plot_data.get("fps_values", [])
+
+            # Create the plot
+            y_pos = range(len(test_names))
+            bars = plt.barh(y_pos, fps_values, align="center")
+            plt.yticks(y_pos, test_names)
+            plt.xlabel("FPS (Frames Per Second)")
+            plt.title("glmark2 Benchmark Results")
+
+            # Add value labels to bars
+            for i, bar in enumerate(bars):
+                width = bar.get_width()
+                plt.text(
+                    width + max(fps_values) * 0.01,
+                    bar.get_y() + bar.get_height() / 2,
+                    f"{fps_values[i]}",
+                    ha="left",
+                    va="center",
+                )
+
+            plt.tight_layout()
+            plt.savefig("report/plots/glmark2_benchmark.png")
+            plt.close()
+
+            # Also create a summary plot if overall score is available
+            glmark2_data_file = "report/results/glmark2_data.json"
+            if os.path.exists(glmark2_data_file):
+                with open(glmark2_data_file, "r") as f:
+                    glmark2_data = json.load(f)
+
+                if "overall_score" in glmark2_data and "opengl_info" in glmark2_data:
+                    score = glmark2_data["overall_score"]
+                    renderer = glmark2_data["opengl_info"].get("renderer", "Unknown")
+
+                    plt.figure(figsize=(8, 6))
+                    plt.bar(["glmark2 Score"], [score], color="green")
+                    plt.title(f"GPU Benchmark Score\n{renderer}")
+                    plt.ylabel("Score")
+
+                    # Add score value as text
+                    plt.text(
+                        0, score + score * 0.02, str(score), ha="center", fontsize=14
+                    )
+
+                    plt.ylim(0, score + score * 0.2)  # Add space above for text
+                    plt.tight_layout()
+                    plt.savefig("report/plots/glmark2_score.png")
+                    plt.close()
+
+            print("glmark2 benchmark plots generated in report/plots/")
+        except Exception as e:
+            print(f"Error generating glmark2 plots: {e}")
+    else:
+        print("No glmark2 data available for plotting")
 
 print("Plots generated in report/plots/")

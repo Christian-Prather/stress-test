@@ -45,10 +45,8 @@ cd stress-tests
 
 2. Install Just (the command runner) and Pixi (optional):
 ```bash
-# For Ubuntu/Debian
-sudo apt install just
 
-# Or install from source
+# Install from source
 cargo install just
 
 # Install pixi for dependency management
@@ -61,22 +59,6 @@ just setup
 ```
 
 This will install all required tools and build the gpu-burn utility with the correct compute capability for your GPU using pixi for dependency management.
-
-### Alternative Pixi Setup
-
-For a more isolated environment, you can use pixi directly:
-
-1. Install pixi (if not already installed):
-```bash
-curl -fsSL https://pixi.sh/install.sh | bash
-```
-
-2. Run the pixi-specific setup command:
-```bash
-just pixi-setup
-```
-
-This creates a completely isolated environment with all dependencies managed by pixi.
 
 ## Usage
 
