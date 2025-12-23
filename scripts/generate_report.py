@@ -272,7 +272,7 @@ def create_gpu_md(results_dir, src_dir):
     gpu_md += "```\n"
 
     # glmark2 Benchmark Test
-    gpu_md += "\n## glmark2 Benchmark Test\n"
+    gpu_md += "\n## glmark2 Benchmark Test\n```\n"
     if os.path.exists(f"{results_dir}/glmark2.log"):
         with open(f"{results_dir}/glmark2.log", "r") as f:
             # Read the content and replace problematic HTML-like tags
@@ -289,6 +289,7 @@ def create_gpu_md(results_dir, src_dir):
             gpu_md += content
     else:
         gpu_md += "No results available\n"
+    gpu_md += "```\n"
 
     # Add glmark2 summary if available
     if os.path.exists(f"{results_dir}/glmark2_data.json"):
