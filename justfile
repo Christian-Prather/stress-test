@@ -3,6 +3,9 @@ setup:
     pixi install
     pixi run cargo install mdbook-pdf
     pixi run sudo apt install glmark2-x11
+    # Install Chrome/Chromium for PDF generation
+    pixi run sudo apt update
+    pixi run sudo apt install -y chromium-browser
 
     mkdir -p report/results
 
