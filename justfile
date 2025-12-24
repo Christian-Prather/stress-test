@@ -111,6 +111,7 @@ generate_report:
     pixi run python3 scripts/generate_report.py report
     mkdir -p report/src/plots
     cp report/plots/* report/src/plots/
+    cp book.toml report/
     pixi run mdbook build report
 
 # Full test with optional duration parameter (defaults to 60s)
